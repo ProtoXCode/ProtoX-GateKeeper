@@ -39,11 +39,7 @@ def main():
         raise RuntimeError(f'GateKeeper blocked execution. '
                            f'Original IP: {IP} <-> Exit IP{exit_ip}')
 
-    logger.info(f'Tor verified - Original IP: {IP} -> Exit IP: {exit_ip}')
-
-    r = session.get('https://httpbin.org/ip', timeout=10)
-    logger.info(f'Test request OK: {r.text.strip()}')
-
+    logger.info(f'Tor verified - Original IP: {IP} -> Exit IP: {exit_ip}\n')
     logger.info('Phase 1 complete: Working Tor session acquired.')
 
 

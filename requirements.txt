@@ -1,4 +1,3 @@
 requests
 pysocks
-folium
-stem
+
