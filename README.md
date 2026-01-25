@@ -1,3 +1,8 @@
+[![PyPI version](https://img.shields.io/pypi/v/protox-gatekeeper.svg)](https://pypi.org/project/protox-gatekeeper/)
+[![Python versions](https://img.shields.io/pypi/pyversions/protox-gatekeeper.svg)](https://pypi.org/project/protox-gatekeeper/)
+[![License](https://img.shields.io/pypi/l/protox-gatekeeper.svg)](https://pypi.org/project/protox-gatekeeper/)
+
+
 # ProtoX GateKeeper
 
 **ProtoX GateKeeper** is a small, opinionated Python library that enforces
@@ -160,7 +165,7 @@ MIT License
 
 ## Status
 
-- Version: **v0.1.1**
+- Version: **v0.1.2**
 - Phase 1 complete
 - API intentionally minimal
 
