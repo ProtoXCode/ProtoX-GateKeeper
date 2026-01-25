@@ -1,105 +1,173 @@
 # ProtoX GateKeeper
 
-ProtoX GateKeeper is a small, focused Python project that enforces **fail-closed Tor routing** for HTTP(S) traffic.
+**ProtoX GateKeeper** is a small, opinionated Python library that enforces
+**fail‑closed Tor routing** for HTTP(S) traffic.
 
-The goal is intentionally narrow and strict:
+The goal is simple:
 
-> Obtain a `requests.Session` that is **provably routed through the Tor network**,
-> or abort execution immediately.
+> If Tor is not active and verified, **nothing runs**.
 
-There is no silent fallback and no best-effort behavior. Either Tor is active and verified, or nothing runs.
+GateKeeper is designed to be *fire‑and‑forget*: create a client once, then perform network operations with a hard guarantee that traffic exits through the Tor network.
 
 ---
 
-## Phase 1 – Status
+## What GateKeeper Is
 
-**Phase 1 is complete.**
+- A **Tor‑verified HTTP client**
+- A thin wrapper around `requests.Session`
+- Fail‑closed by default (no silent clearnet fallback)
+- Observable (exit IP, optional geo info)
+- Suitable for scripts, tooling, and automation
 
-At this stage, GateKeeper can:
+---
 
-- Create a `requests.Session` routed through a local Tor SOCKS proxy
-- Verify that traffic exits via the Tor network
-- Compare and log clearnet IP vs Tor exit IP
-- Fail hard if Tor is unavailable or misconfigured
+## What GateKeeper Is NOT
 
-Phase 1 deliberately avoids:
+- ❌ A Tor controller
+- ❌ A crawler or scanner
+- ❌ An anonymization silver bullet
+- ❌ A replacement for Tor Browser
 
-- Tor circuit inspection
-- ControlPort interaction
-- Identity rotation (NEWNYM)
-- Geo‑location or visualization
-
-Those features are intentionally deferred to later phases.
+GateKeeper enforces transport routing only. You are still responsible for *what* you do with it.
 
 ---
 
 ## Requirements
 
-- Python 3.10 or newer
-- Tor running locally
-  - Tor Browser (default SOCKS port: `9150`)
-  - or Tor service (commonly `9050`)
+- A locally running Tor client
+- SOCKS proxy enabled (default: `127.0.0.1:9150`)
 
-Python dependencies:
-
-```
-requests
-pysocks
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
+On Windows this usually means **Tor Browser** running in the background.
 
 ---
 
-## Running the Project
+## Installation
 
-Ensure Tor is fully started and connected before running the script.
+### From source (development)
 
 ```bash
-python main.py
+pip install -e .
 ```
 
-Example output:
+(Recommended while developing or testing.)
+
+---
+
+## Basic Usage
+
+```python
+import logging
+from protox_gatekeeper import GateKeeper
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(levelname)s] %(name)s - %(message)s'
+)
+
+gk = GateKeeper(geo=True)
+
+gk.download(
+    "https://httpbin.org/bytes/1024",
+    "downloads/test.bin"
+)
+```
+
+### Example output
 
 ```
-GateKeeper boot: Acquiring Tor-verified session...
-Tor verified - Original IP: 89.xxx.xxx.xxx -> Exit IP: 185.xxx.xxx.xxx
-Test request OK: { "origin": "185.xxx.xxx.xxx" }
-Phase 1 complete: Working Tor session acquired.
+[INFO] gatekeeper.core - Tor verified: 89.xxx.xxx.xxx -> 185.xxx.xxx.xxx
+[INFO] gatekeeper.core - Tor exit location: Brandenburg, DE
+[INFO] gatekeeper.core - [Tor 185.xxx.xxx.xxx] downloading https://httpbin.org/bytes/1024 -> downloads/test.bin
 ```
 
-If Tor is not reachable or verification fails, execution stops immediately.
+This confirms:
+- clearnet IP was measured
+- Tor routing was verified
+- all traffic used the Tor exit shown
+
+---
+
+## API Overview
+
+### `GateKeeper(...)`
+
+```python
+gk = GateKeeper(
+    socks_port=9150,
+    geo=False
+)
+```
+
+**Parameters**:
+- `socks_port` *(int)* – Tor SOCKS port (default: `9150`)
+- `geo` *(bool)* – Enable best‑effort Tor exit geolocation (optional)
+
+Raises `RuntimeError` if Tor routing cannot be verified.
+
+---
+
+### `download(url, target_path)`
+
+Downloads a resource **through the verified Tor session**.
+
+```python
+gk.download(url, target_path)
+```
+
+- `url` – HTTP(S) URL
+- `target_path` – Full local file path (directories created automatically)
 
 ---
 
 ## Design Principles
 
-- **Fail‑closed by default** – no Tor, no execution
-- **No silent fallback** – clearnet traffic is never allowed accidentally
-- **Explicit verification** – Tor exit is confirmed via Tor Project infrastructure
-- **Observable behavior** – IP transition is logged and visible
-- **Minimal scope** – Phase 1 does exactly one thing, correctly
+- **Fail closed**: no Tor → no execution
+- **Single verification point** (during construction)
+- **No global state**
+- **No logging configuration inside the library**
+- **Session reuse without re‑verification**
+
+Logging is emitted by the library, but **configured by the application**.
 
 ---
 
-## Intended Use
+## Logging
 
-ProtoX GateKeeper is designed as a foundational **enforcement primitive**:
+GateKeeper uses standard Python logging:
 
-- Educational exploration of proxy enforcement and verification
-- A reusable guard layer for privacy‑aware tooling
-- A building block for more advanced Tor‑aware systems
+```python
+import logging
+logging.basicConfig(level=logging.INFO)
+```
 
-It is not designed to bypass laws, policies, or service terms.
+The library does **not** call `logging.basicConfig()` internally.
+
+---
+
+## Security Notes
+
+- Tor exit IPs may rotate over time
+- Geo information is best‑effort and may be unavailable (rate‑limits, CAPTCHAs)
+- GateKeeper guarantees routing, not anonymity
 
 ---
 
 ## License
 
-This project is licensed under the MIT License.
-See the `LICENSE` file for details.
+MIT License
+
+---
+
+## Status
+
+- Version: **v0.1.x**
+- Phase 1 complete
+- API intentionally minimal
+
+Future versions may add optional features such as:
+- circuit rotation
+- ControlPort support
+- higher‑level request helpers
+
+Without breaking the core contract.
 
