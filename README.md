@@ -2,25 +2,24 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/protox-gatekeeper.svg)](https://pypi.org/project/protox-gatekeeper/)
 [![License](https://img.shields.io/pypi/l/protox-gatekeeper.svg)](https://pypi.org/project/protox-gatekeeper/)
 
-
 # ProtoX GateKeeper
 
 **ProtoX GateKeeper** is a small, opinionated Python library that enforces
-**fail‑closed Tor routing** for HTTP(S) traffic.
+**fail-closed Tor routing** for HTTP(S) traffic.
 
 The goal is simple:
 
 > If Tor is not active and verified, **nothing runs**.
 
-GateKeeper is designed to be *fire‑and‑forget*: create a client once, then perform network operations with a hard guarantee that traffic exits through the Tor network.
+GateKeeper is designed to be *fire-and-forget*: create a client once, then perform network operations with a hard guarantee that traffic exits through the Tor network.
 
 ---
 
 ## What GateKeeper Is
 
-- A **Tor‑verified HTTP client**
-- A thin wrapper around `requests.Session`
-- Fail‑closed by default (no silent clearnet fallback)
+- A **Tor-verified HTTP client**
+- A thin wrapper around `requests.Session` with safe helpers
+- Fail-closed by default (no silent clearnet fallback)
 - Observable (exit IP, optional geo info)
 - Suitable for scripts, tooling, and automation
 
@@ -47,6 +46,12 @@ On Windows this usually means **Tor Browser** running in the background.
 ---
 
 ## Installation
+
+### From PyPI
+
+```bash
+pip install protox-gatekeeper
+```
 
 ### From source (development)
 
@@ -92,6 +97,20 @@ This confirms:
 
 ---
 
+### HTTP requests
+
+GateKeeper can also be used as a Tor-verified HTTP client:
+
+```python
+with GateKeeper() as gk:
+    response = gk.get("https://httpbin.org/ip")
+    print(response.json())
+```
+
+All requests are guaranteed to use the verified Tor session.
+
+---
+
 ## API Overview
 
 ### `GateKeeper(...)`
@@ -105,7 +124,7 @@ gk = GateKeeper(
 
 **Parameters**:
 - `socks_port` *(int)* – Tor SOCKS port (default: `9150`)
-- `geo` *(bool)* – Enable best‑effort Tor exit geolocation (optional)
+- `geo` *(bool)* – Enable best-effort Tor exit geolocation (optional)
 
 Raises `RuntimeError` if Tor routing cannot be verified.
 
@@ -124,13 +143,37 @@ gk.download(url, target_path)
 
 ---
 
+### `get(url, **kwargs)`
+
+Performs a Tor-verified HTTP GET request.
+
+```python
+response = gk.get(url, timeout=10)
+```
+
+Returns a standard `requests.Response`.
+
+---
+
+### `post(url, data=None, json=None, **kwargs)`
+
+Performs a Tor-verified HTTP POST request.
+
+```python
+response = gk.post(url, json={"key": "value"})
+```
+
+Returns a standard `requests.Response`.
+
+---
+
 ## Design Principles
 
 - **Fail closed**: no Tor → no execution
 - **Single verification point** (during construction)
 - **No global state**
 - **No logging configuration inside the library**
-- **Session reuse without re‑verification**
+- **Session reuse without re-verification**
 
 Logging is emitted by the library, but **configured by the application**.
 
@@ -152,8 +195,8 @@ The library does **not** call `logging.basicConfig()` internally.
 ## Security Notes
 
 - Tor exit IPs may rotate over time
-- Geo information is best‑effort and may be unavailable (rate‑limits, CAPTCHAs)
-- GateKeeper guarantees routing, not anonymity
+- Geo information is best-effort and may be unavailable (rate-limits, CAPTCHAs)
+- GateKeeper guarantees transport routing, not anonymity
 
 ---
 
@@ -165,14 +208,13 @@ MIT License
 
 ## Status
 
-- Version: **v0.1.2**
-- Phase 1 complete
+- Version: **v0.2.0**
+- Phase 2 in progress
 - API intentionally minimal
 
 Future versions may add optional features such as:
 - circuit rotation
 - ControlPort support
-- higher‑level request helpers
+- higher-level request helpers
 
 Without breaking the core contract.
-

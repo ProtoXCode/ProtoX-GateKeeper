@@ -69,6 +69,31 @@ class GateKeeper:
         """ Returns the Tor exit IP address. """
         return self.exit_ip
 
+    def get(self, url: str, **kwargs) -> requests.Response:
+        """
+        Passes a GET request to the Tor Gatekeeper.
+
+        Args:
+            url (str): The url to request.
+            **kwargs: Additional parameters to pass to the GET request.
+        """
+        logger.info(f'[Tor {self.tor_exit}] GET {url}')
+        return self._session.get(url=url, **kwargs)
+
+    def post(self, url: str, data=None, json=None,
+             **kwargs) -> requests.Response:
+        """
+        Passes a POST request to the Tor Gatekeeper.
+
+        Args:
+            url (str): The url to post to.
+            data (dict, optional): The data to post.
+            json (dict, optional): The json data to post.
+            **kwargs: Additional parameters to pass to the POST request.
+        """
+        logger.info(f'[Tor {self.tor_exit}] POST {url}')
+        return self._session.post(url=url, data=data, json=json, **kwargs)
+
     def download(self, url: str, target_path: str, timeout: int = 30,
                  chunk_size: int = 8192):
         """
