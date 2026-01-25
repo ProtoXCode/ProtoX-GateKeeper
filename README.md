@@ -160,7 +160,7 @@ MIT License
 
 ## Status
 
-- Version: **v0.1.x**
+- Version: **v0.1.1**
 - Phase 1 complete
 - API intentionally minimal
 
