@@ -1,6 +1,7 @@
 import logging
 
 import requests
+from requests.exceptions import RequestException
 
 from protox_gatekeeper.session import make_tor_session
 from protox_gatekeeper.verify import is_tor_exit, get_public_ip
@@ -33,8 +34,16 @@ class GateKeeper:
         self._session = make_tor_session(port=socks_port)
 
         # 3) Verify Tor routing
-        if not is_tor_exit(session=self._session, timeout=timeout):
-            raise RuntimeError('Tor verification failed. Execution aborted.')
+        try:
+            if not is_tor_exit(session=self._session, timeout=timeout):
+                raise RuntimeError(
+                    'Tor verification failed. Execution aborted.')
+        except RequestException as e:
+            logger.debug('Underlying Tor connection error', exc_info=e)
+            raise RuntimeError(
+                f'Tor SOCKS proxy is not reachable on 127.0.0.1:{socks_port}. '
+                'Start Tor or Tor Browser and try again.'
+            ) from None
 
         # 4) Measure Tor exit IP
         self.exit_ip = get_public_ip(session=self._session, timeout=timeout)

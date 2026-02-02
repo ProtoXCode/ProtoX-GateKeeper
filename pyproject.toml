@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "protox-gatekeeper"
-version = "0.2.0"
+version = "0.2.1"
 description = "Fail-closed Tor session enforcement for Python HTTP(S) traffic"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -20,6 +20,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Lanugage :: Python :: 3.13",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]

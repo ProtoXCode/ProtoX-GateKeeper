@@ -208,7 +208,7 @@ MIT License
 
 ## Status
 
-- Version: **v0.2.0**
+- Version: **v0.2.1**
 - Phase 2 in progress
 - API intentionally minimal
 

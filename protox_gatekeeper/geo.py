@@ -10,7 +10,7 @@ def geo_lookup(ip: str) -> str | None:
         r = requests.get(
             url=f'https://ipapi.co/{ip}/json',
             timeout=10,
-            headers={'User-Agent': 'GateKeeper/0.1.0'}
+            headers={'User-Agent': 'GateKeeper/0.2.1'}
         )
         if r.status_code != 200:
             return None
