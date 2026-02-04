@@ -130,6 +130,43 @@ Raises `RuntimeError` if Tor routing cannot be verified.
 
 ---
 
+### `request(method, url, **kwargs)`
+
+Performs an arbitrary HTTP request **through the verified Tor session**.
+
+This is a thin passthrough to `requests.Session.request`, with enforced Tor
+routing and logging.
+
+```python
+r = gk.request(
+    "GET",
+    "https://httpbin.org/ip",
+    timeout=10
+)
+print(r.json())
+```
+
+- `method` – HTTP verb (GET, POST, PUT, DELETE, ...)
+- `url` – Target URL
+- `**kwargs` – Forwarded directly to `requests`
+
+This is the **core execution path** used internally by helper methods like `get()` and `post()`.
+
+---
+
+### `download(url, target_path)`
+
+Downloads a resource **through the verified Tor session**.
+
+```python
+gk.download(url, target_path)
+```
+
+- `url` – HTTP(S) URL
+- `target_path` – Full local file path (directories created automatically)
+
+---
+
 ### `download(url, target_path)`
 
 Downloads a resource **through the verified Tor session**.
@@ -207,8 +244,7 @@ MIT License
 ---
 
 ## Status
-
-- Version: **v0.2.1**
+- Version: **v0.2.2**
 - Phase 2 in progress
 - API intentionally minimal
 

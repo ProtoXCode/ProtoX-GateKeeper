@@ -78,6 +78,32 @@ class GateKeeper:
         """ Returns the Tor exit IP address. """
         return self.exit_ip
 
+    # --- Core function ----------------------------------------------------- #
+
+    def request(self, method: str, url: str, **kwargs) -> requests.Response:
+        """
+        Perform a HTTP request throught the Tor-verified session.
+
+        This is a thin passthrough to ``requests.Session.request`` with enforced
+        Tor routing and logging.
+
+        Args:
+            method (str): HTTP method (e.g. "GET", "POST", "PUT", "DELETE").
+            url (str): The url to request.
+            **kwargs: Additional arguments passed directly to
+            ``requests.Session.request``.
+
+        Returns:
+            requests.Response: The HTTP response.
+
+        Raises:
+            RuntimeError: If the Tor session is not available or verified.
+        """
+        logger.info(f'[Tor {self.tor_exit}] {method.upper()} {url}')
+        return self._session.request(method=method, url=url, **kwargs)
+
+    # --- Helper functions -------------------------------------------------- #
+
     def get(self, url: str, **kwargs) -> requests.Response:
         """
         Passes a GET request to the Tor Gatekeeper.
@@ -87,7 +113,7 @@ class GateKeeper:
             **kwargs: Additional parameters to pass to the GET request.
         """
         logger.info(f'[Tor {self.tor_exit}] GET {url}')
-        return self._session.get(url=url, **kwargs)
+        return self.request('GET', url, **kwargs)
 
     def post(self, url: str, data=None, json=None,
              **kwargs) -> requests.Response:
@@ -101,7 +127,35 @@ class GateKeeper:
             **kwargs: Additional parameters to pass to the POST request.
         """
         logger.info(f'[Tor {self.tor_exit}] POST {url}')
-        return self._session.post(url=url, data=data, json=json, **kwargs)
+        return self.request('POST', url, data=data, json=json, **kwargs)
+
+    def put(self, url: str, data=None, json=None,
+            **kwargs) -> requests.Response:
+        """
+        Passes a PUT request to the Tor Gatekeeper.
+
+        Args:
+             url (str): The url to put to.
+             data (dict, optional): The data to put.
+             json (dict, optional): The json data to put.
+             **kwargs: Additional parameters to pass to the PUT request.
+        """
+        logger.info(f'[Tor {self.tor_exit}] PUT {url}')
+        return self.request(
+            method='PUT', url=url, data=data, json=json, **kwargs)
+
+    def delete(self, url: str, **kwargs) -> requests.Response:
+        """
+        Passes a DELETE request to the Tor Gatekeeper.
+
+        Args:
+            url (str): The url to delete.
+            **kwargs: Additional parameters to pass to the DELETE request.
+        """
+        logger.info(f'[Tor {self.tor_exit}] DELETE {url}')
+        return self.request(method='DELETE', url=url, **kwargs)
+
+    # --- Custom functions -------------------------------------------------- #
 
     def download(self, url: str, target_path: str, timeout: int = 30,
                  chunk_size: int = 8192):
