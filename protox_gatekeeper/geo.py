@@ -2,15 +2,19 @@ import logging
 
 import requests
 
+from protox_gatekeeper.utils import get_version_from_toml
+
 logger = logging.getLogger(__name__)
 
+VERSION = get_version_from_toml()
 
 def geo_lookup(ip: str) -> str | None:
+    """ Tries to lookup geolocation for a given IP address of the Tor exit """
     try:
         r = requests.get(
             url=f'https://ipapi.co/{ip}/json',
             timeout=10,
-            headers={'User-Agent': 'GateKeeper/0.2.1'}
+            headers={'User-Agent': f'GateKeeper/{VERSION}'},
         )
         if r.status_code != 200:
             return None
