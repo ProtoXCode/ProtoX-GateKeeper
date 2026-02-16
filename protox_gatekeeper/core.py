@@ -158,7 +158,7 @@ class GateKeeper:
     # --- Custom functions -------------------------------------------------- #
 
     def download(self, url: str, target_path: str, timeout: int = 30,
-                 chunk_size: int = 8192):
+                 chunk_size: int = 8192, **kwargs):
         """
         Attempts to download the given url to the target path.
 
@@ -167,6 +167,7 @@ class GateKeeper:
             target_path (str): The target path.
             timeout (int, optional): The timeout to wait for a response.
             chunk_size (int, optional): The chunk size to use for download.
+            **kwargs: Additional parameters to pass to the download request.
         """
         logger.info(
             f'[Tor {self.tor_exit}] downloading {url} -> {target_path}')
@@ -176,5 +177,6 @@ class GateKeeper:
             url=url,
             target_path=target_path,
             timeout=timeout,
-            chunk_size=chunk_size
+            chunk_size=chunk_size,
+            **kwargs
         )

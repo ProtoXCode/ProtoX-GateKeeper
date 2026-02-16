@@ -8,7 +8,8 @@ def download_file(
         url: str,
         target_path: str,
         timeout: int,
-        chunk_size: int
+        chunk_size: int,
+        **kwargs
 ) -> None:
     if not isinstance(session, requests.Session):
         raise TypeError('A verified requests.Session is required.')
@@ -17,7 +18,7 @@ def download_file(
     if dir_path:
         os.makedirs(dir_path, exist_ok=True)
 
-    response = session.get(url, stream=True, timeout=timeout)
+    response = session.get(url, stream=True, timeout=timeout, **kwargs)
     response.raise_for_status()
 
     with open(target_path, 'wb') as f:

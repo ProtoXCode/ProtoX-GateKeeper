@@ -134,8 +134,7 @@ Raises `RuntimeError` if Tor routing cannot be verified.
 
 Performs an arbitrary HTTP request **through the verified Tor session**.
 
-This is a thin passthrough to `requests.Session.request`, with enforced Tor
-routing and logging.
+This is a thin passthrough to `requests.Session.request`, with enforced Tor routing and logging.
 
 ```python
 r = gk.request(
@@ -233,9 +232,30 @@ The library does **not** call `logging.basicConfig()` internally.
 
 - Tor exit IPs may rotate over time
 - Geo information is best-effort and may be unavailable (rate-limits, CAPTCHAs)
-- GateKeeper guarantees transport routing, not anonymity
+- GateKeeper guarantees routing, not anonymity
+
+### TLS Verification
+
+All request methods forward arguments directly to `requests`. If you need to interact with legacy systems that have expired or self-signed certificates, you may disable TLS verification per request:
+
+```python
+r = gk.request(
+    "GET",
+    "https://legacy.example.com",
+    verify=False
+)
+```
+
+Or for downloads:
+
+```python
+gk.download(url, "file.bin", verify=False)
+```
+
+Disabling certificate verification reduces transport security and should only be used when necessary.
 
 ---
+
 
 ## License
 
@@ -244,7 +264,7 @@ MIT License
 ---
 
 ## Status
-- Version: **v0.2.2**
+- Version: **v0.2.3**
 - Phase 2 in progress
 - API intentionally minimal
 
