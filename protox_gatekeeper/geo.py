@@ -2,11 +2,10 @@ import logging
 
 import requests
 
-from protox_gatekeeper.utils import get_version_from_toml
-
 logger = logging.getLogger(__name__)
 
-VERSION = get_version_from_toml()
+VERSION = '0.2.4'
+
 
 def geo_lookup(ip: str) -> str | None:
     """ Tries to lookup geolocation for a given IP address of the Tor exit """
