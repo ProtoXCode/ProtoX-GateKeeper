@@ -4,7 +4,7 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-VERSION = '0.2.4'
+VERSION = '0.2.5'
 
 
 def geo_lookup(ip: str) -> str | None:

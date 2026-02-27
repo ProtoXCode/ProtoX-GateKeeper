@@ -22,6 +22,10 @@ class GateKeeper:
             timeout (int, optional): The timeout to wait for a response. Defaults to 10.
         """
 
+        self._geo = geo
+        self._port = socks_port
+        self._timeout = timeout
+
         self._session: requests.Session
         self.exit_ip: str
         self.clearnet_ip: str
@@ -82,7 +86,7 @@ class GateKeeper:
 
     def request(self, method: str, url: str, **kwargs) -> requests.Response:
         """
-        Perform a HTTP request throught the Tor-verified session.
+        Perform an HTTP request throught the Tor-verified session.
 
         This is a thin passthrough to ``requests.Session.request`` with enforced
         Tor routing and logging.
@@ -102,6 +106,68 @@ class GateKeeper:
         logger.info(f'[Tor {self.tor_exit}] {method.upper()} {url}')
         return self._session.request(method=method, url=url, **kwargs)
 
+    # --- Circuit rotation -------------------------------------------------- #
+
+    def rotate(self) -> str:
+        """
+        Attempt to rotate the Tor exit by renewing the session and re-verifying
+    routing.
+
+    This method closes the current Tor session, creates a new one, and
+    performs full Tor verification again.
+
+    Important:
+        Tor may reuse existing circuits for performance and stability.
+        Therefore, calling ``rotate()`` does not guarantee a different
+        exit IP address. If the exit remains unchanged, this does not
+        indicate failure — it reflects Tor's circuit reuse policy.
+
+    Returns:
+        str: The current Tor exit IP address after rotation attempt.
+
+    Raises:
+        RuntimeError: If Tor verification fails after session renewal.
+        """
+        old_exit = self.exit_ip
+
+        logger.info(f'[Tor {old_exit}] rotating session...')
+
+        self._session.close()
+        self._session = make_tor_session(port=self._port)
+
+        try:
+            if not is_tor_exit(session=self._session, timeout=self._timeout):
+                raise RuntimeError(
+                    'Tor verification failed after rotation.'
+                )
+        except RequestException:
+            raise RuntimeError(
+                f'Tor SOCKS proxy is not reachable on '
+                f'127.0.0.1:{self._port}. '
+                'Start Tor or Tor Browser and try again.'
+            ) from None
+
+        # Measure new exit IP
+        self.exit_ip = get_public_ip(
+            session=self._session,
+            timeout=self._timeout
+        )
+
+        if old_exit != self.exit_ip:
+            logger.info(f'Tor exit rotated: {old_exit} -> {self.exit_ip}')
+
+            if self._geo:
+                location = geo_lookup(self.exit_ip)
+                if location:
+                    logger.info(f'Tor exit location: {location}')
+                else:
+                    logger.info('Tor exit location: Unavailable')
+        else:
+            logger.warning(
+                f'Tor exit unchanged after rotation attempt: {self.exit_ip}')
+
+        return self.exit_ip
+
     # --- Helper functions -------------------------------------------------- #
 
     def get(self, url: str, **kwargs) -> requests.Response:
@@ -112,7 +178,6 @@ class GateKeeper:
             url (str): The url to request.
             **kwargs: Additional parameters to pass to the GET request.
         """
-        logger.info(f'[Tor {self.tor_exit}] GET {url}')
         return self.request('GET', url, **kwargs)
 
     def post(self, url: str, data=None, json=None,
@@ -126,7 +191,6 @@ class GateKeeper:
             json (dict, optional): The json data to post.
             **kwargs: Additional parameters to pass to the POST request.
         """
-        logger.info(f'[Tor {self.tor_exit}] POST {url}')
         return self.request('POST', url, data=data, json=json, **kwargs)
 
     def put(self, url: str, data=None, json=None,
@@ -140,7 +204,6 @@ class GateKeeper:
              json (dict, optional): The json data to put.
              **kwargs: Additional parameters to pass to the PUT request.
         """
-        logger.info(f'[Tor {self.tor_exit}] PUT {url}')
         return self.request(
             method='PUT', url=url, data=data, json=json, **kwargs)
 
@@ -152,7 +215,6 @@ class GateKeeper:
             url (str): The url to delete.
             **kwargs: Additional parameters to pass to the DELETE request.
         """
-        logger.info(f'[Tor {self.tor_exit}] DELETE {url}')
         return self.request(method='DELETE', url=url, **kwargs)
 
     # --- Custom functions -------------------------------------------------- #
